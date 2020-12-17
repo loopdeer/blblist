@@ -174,6 +174,7 @@ fun songScreen(selection: MutableMap<String, MutableState<Boolean>>){
             Text("Songs")
             TextField(searchField.value, {searchField.value = it})
             LazyColumnFor(items = nonMuteMap.keys.toList(), itemContent = {
+                if(searchField.value.isBlank() || it.parentFile.name.contains(searchField.value, true))
                 songEntry(it, nonMuteMap[it] ?: "", selection)
             })
     }
