@@ -21,7 +21,6 @@ var mapping: MutableMap<File, String>? = null
 val playLists = mutableStateMapOf<File, Playlist>()
 val selectedPlaylist = mutableStateOf(Playlist("","","","", mutableListOf()))
 
-
 fun MutableState<Playlist>.equalsPlaylist(plist: Playlist?): Boolean{
     //println(this.value.playlistTitle)
     if(plist == null || this.value.playlistTitle == "")
@@ -86,7 +85,6 @@ fun main() = Window(title = "B-List Beatlist", size = IntSize(800,600)){
     val folderSet = mutableStateOf(false)
     //Map to remember selected songs
     val selectedSongs by remember {mutableStateOf(mutableMapOf<String, MutableState<Boolean>>())}
-
     MaterialTheme {
         var currentScreen by remember { mutableStateOf(Screen.HOME) }
         Column {
@@ -109,20 +107,15 @@ fun main() = Window(title = "B-List Beatlist", size = IntSize(800,600)){
                 }
                 //loosely is content
                 Column(Modifier.weight(4f)){
-                    if(folderSet.value) {
-                        if (mapping == null) loadEverything(beatSaberFolder.value, selectedSongs)
-                        when (currentScreen) {
-                            Screen.HOME -> homeScreen(beatSaberFolder, folderSet)
-                            Screen.SONGS -> songScreen(selectedSongs)
-                            Screen.PLAYLISTS -> playlistsScreen(selectedSongs)
-                            Screen.GENERATE -> generateScreen(selectedSongs, beatSaberFolder)
-                        }
+                if (mapping == null) loadEverything(beatSaberFolder.value, selectedSongs)
+                    when (currentScreen) {
+                        Screen.HOME -> homeScreen(beatSaberFolder, folderSet, selectedSongs)
+                        Screen.SONGS -> songScreen(selectedSongs)
+                        Screen.PLAYLISTS -> playlistsScreen(selectedSongs)
+                        Screen.GENERATE -> generateScreen(selectedSongs, beatSaberFolder)
+                    }
 
-                    }
-                    else {
-                        currentScreen = Screen.HOME
-                        homeScreen(beatSaberFolder, folderSet)
-                    }
+
                 }
 
             }
@@ -155,12 +148,13 @@ fun playlistEntry(playlist: Playlist, selection: MutableMap<String, MutableState
     }
 }
 @Composable
-fun homeScreen(field: MutableState<String>, folderCheck: MutableState<Boolean>) {
+fun homeScreen(field: MutableState<String>, folderCheck: MutableState<Boolean>, select: MutableMap<String, MutableState<Boolean>>) {
     Column{
         Text("Type in the path to the Beat Saber Folder (Folder where Beat Saber.exe is located)")
         Row{
             TextField(field.value, {field.value = it })
-            Button(onClick = {folderCheck.value = File(field.value + "\\Beat Saber.exe").exists()}){Text("Check Path")}
+            Button(onClick = {folderCheck.value = File(field.value + "\\Beat Saber.exe").exists()
+            if(folderCheck.value) loadEverything(field.value, select)}){Text("Check Path")}
         }
         Text("Steps:")
         Text("1) Validate your Beat Saber Install Path (click check path after typing in the path)")
@@ -174,12 +168,14 @@ fun homeScreen(field: MutableState<String>, folderCheck: MutableState<Boolean>) 
 
 @Composable
 fun songScreen(selection: MutableMap<String, MutableState<Boolean>>){
+    val searchField = remember{mutableStateOf("")}
     val nonMuteMap: Map<File, String> = mapping?.toMap() ?: mutableMapOf()
         Column{
-        Text("Songs")
-        LazyColumnFor(items = nonMuteMap.keys.toList(), itemContent = {
-            songEntry(it, nonMuteMap[it] ?: "", selection)
-        })
+            Text("Songs")
+            TextField(searchField.value, {searchField.value = it})
+            LazyColumnFor(items = nonMuteMap.keys.toList(), itemContent = {
+                songEntry(it, nonMuteMap[it] ?: "", selection)
+            })
     }
 }
 
